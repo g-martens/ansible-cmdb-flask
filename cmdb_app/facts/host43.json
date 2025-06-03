@@ -1,0 +1,31 @@
+{
+  "ansible_facts": {
+    "ansible_hostname": "host43",
+    "ansible_fqdn": "host43.example.com",
+    "ansible_all_ipv4_addresses": [
+      "192.168.1.43"
+    ],
+    "ansible_distribution": "RedHat",
+    "ansible_distribution_version": "8",
+    "ansible_architecture": "arm64",
+    "ansible_processor": [
+      "Intel(R) Core(TM) i7",
+      "10700K"
+    ],
+    "ansible_processor_cores": 10,
+    "ansible_memtotal_mb": 32768,
+    "ansible_kernel": "5.10.0-21-amd64",
+    "ansible_interfaces": {
+      "eth0": {
+        "ipv4": "192.168.1.43",
+        "mac": "00:11:22:33:00:2b"
+      }
+    },
+    "ansible_devices": {
+      "sda": {
+        "size": "250G",
+        "model": "Crucial MX500"
+      }
+    }
+  }
+}

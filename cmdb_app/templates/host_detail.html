@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <title>Ansible Facts - {{ hostname }}</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        h1 { font-size: 24px; }
+        h2 { font-size: 20px; margin-top: 30px; }
+        table { border-collapse: collapse; width: 100%; margin-top: 10px; }
+        th, td { border: 1px solid #ccc; padding: 8px; }
+        th { background-color: #f2f2f2; text-align: left; }
+        .section { margin-bottom: 40px; }
+        pre { white-space: pre-wrap; word-wrap: break-word; }
+    </style>
+    <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+
+<header>
+  <div class="logo">
+    <img src="/static/images/Tux.svg.png" alt="Tux Linux Mascotte" />
+  </div>
+  <h1>Ansible CMDB</h1>
+</header>
+
+<body>
+    <h1>Ansible Facts voor host: {{ hostname }}</h1>
+    <a href="/">⬅️ Terug naar overzicht</a>
+
+    {% macro render_section(title, data) %}
+        {% if data %}
+        <div class="section">
+            <h2>{{ title }}</h2>
+            <table>
+                <tbody>
+                {% for key, value in data.items() %}
+                    <tr>
+                        <th>{{ key }}</th>
+                        <td>
+                            {% if value is mapping %}
+                                <pre>{{ value | tojson(indent=2) }}</pre>
+                            {% elif value is iterable and not value is string %}
+                                <pre>{{ value | join(', ') }}</pre>
+                            {% else %}
+                                {{ value }}
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+    {% endmacro %}
+
+    {{ render_section("Systeeminformatie", {
+        "OS": facts.get('ansible_distribution', '') + ' ' + facts.get('ansible_distribution_version', ''),
+        "Kernel": facts.get('ansible_kernel', ''),
+        "Hostname": facts.get('ansible_hostname', ''),
+        "FQDN": facts.get('ansible_fqdn', '')
+    }) }}
+
+    {{ render_section("CPU & Geheugen", {
+        "CPU Cores": facts.get('ansible_processor_cores', ''),
+        "CPU Model": (facts.get('ansible_processor') or ['', ''])[1],
+        "RAM MB": facts.get('ansible_memtotal_mb', '')
+    }) }}
+
+    {{ render_section("Netwerk Interfaces", facts.get('ansible_interfaces', {})) }}
+
+    {{ render_section("Devices", facts.get('ansible_devices', {}) ) }}
+
+    {{ render_section("Overige Facts", facts ) }}
+
+</body>
+<div class="footer">
+  <p>Made by Guido Martens</p>
+</div>
+</html>

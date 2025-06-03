@@ -1,0 +1,31 @@
+{
+  "ansible_facts": {
+    "ansible_hostname": "host29",
+    "ansible_fqdn": "host29.example.com",
+    "ansible_all_ipv4_addresses": [
+      "192.168.1.29"
+    ],
+    "ansible_distribution": "Debian",
+    "ansible_distribution_version": "11",
+    "ansible_architecture": "x86_64",
+    "ansible_processor": [
+      "Intel(R) Xeon(R) CPU",
+      "E5-2676 v3"
+    ],
+    "ansible_processor_cores": 14,
+    "ansible_memtotal_mb": 4096,
+    "ansible_kernel": "5.10.0-21-amd64",
+    "ansible_interfaces": {
+      "eth0": {
+        "ipv4": "192.168.1.29",
+        "mac": "00:11:22:33:00:1d"
+      }
+    },
+    "ansible_devices": {
+      "sda": {
+        "size": "100G",
+        "model": "Samsung SSD 860"
+      }
+    }
+  }
+}

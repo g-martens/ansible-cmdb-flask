@@ -1,0 +1,31 @@
+{
+  "ansible_facts": {
+    "ansible_hostname": "host59",
+    "ansible_fqdn": "host59.example.com",
+    "ansible_all_ipv4_addresses": [
+      "192.168.1.59"
+    ],
+    "ansible_distribution": "Ubuntu",
+    "ansible_distribution_version": "20.04",
+    "ansible_architecture": "arm64",
+    "ansible_processor": [
+      "AMD EPYC",
+      "7501"
+    ],
+    "ansible_processor_cores": 2,
+    "ansible_memtotal_mb": 4096,
+    "ansible_kernel": "4.18.0-240.el8.x86_64",
+    "ansible_interfaces": {
+      "eth0": {
+        "ipv4": "192.168.1.59",
+        "mac": "00:11:22:33:00:3b"
+      }
+    },
+    "ansible_devices": {
+      "sda": {
+        "size": "250G",
+        "model": "Kingston A400"
+      }
+    }
+  }
+}

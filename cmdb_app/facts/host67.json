@@ -1,0 +1,31 @@
+{
+  "ansible_facts": {
+    "ansible_hostname": "host67",
+    "ansible_fqdn": "host67.example.com",
+    "ansible_all_ipv4_addresses": [
+      "192.168.1.67"
+    ],
+    "ansible_distribution": "Fedora",
+    "ansible_distribution_version": "36",
+    "ansible_architecture": "arm64",
+    "ansible_processor": [
+      "Intel(R) Core(TM) i7",
+      "10700K"
+    ],
+    "ansible_processor_cores": 2,
+    "ansible_memtotal_mb": 4096,
+    "ansible_kernel": "4.18.0-240.el8.x86_64",
+    "ansible_interfaces": {
+      "eth0": {
+        "ipv4": "192.168.1.67",
+        "mac": "00:11:22:33:00:43"
+      }
+    },
+    "ansible_devices": {
+      "sda": {
+        "size": "100G",
+        "model": "Kingston A400"
+      }
+    }
+  }
+}

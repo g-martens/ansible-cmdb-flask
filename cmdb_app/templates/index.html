@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <title>CMDB Overview</title>
+
+    <link rel="stylesheet" href="/static/css/jquery.dataTables.min.css" />
+    <link rel="stylesheet" href="/static/css/jbuttons.dataTables.min.css" />
+    <link rel="stylesheet" href="/static/css/select2.min.css" />
+    <link rel="stylesheet" href="/static/css/style.css" />
+
+    <script src="/static/js/jquery-3.7.0.min.js"></script>
+    <script src="/static/js/jquery.dataTables.min.js"></script>
+    <script src="/static/js/dataTables.buttons.min.js"></script>
+    <script src="/static/js/buttons.html5.min.js"></script>
+    <script src="/static/js/buttons.colVis.min.js"></script>
+    <script src="/static/js/jszip.min.js"></script>
+    <script src="/static/js/select2.min.js"></script>
+
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        table { width: 100%; }
+        a { color: blue; text-decoration: none; }
+        .filter-select { width: 100%; }
+        label { font-weight: bold; }
+        #hostname-regex { margin-left: 10px; width: 300px; }
+    </style>
+    
+</head>
+
+<header>
+  <div class="logo">
+    <img src="/static/images/Tux.svg.png" alt="Tux Linux Mascotte" />
+  </div>
+  <h1>Ansible CMDB</h1>
+</header>
+
+<body>
+    <h1>CMDB - Ansible Facts Overzicht</h1>
+
+    <label for="hostname-regex">🔍 Regex filter op Hostname:</label>
+    <input type="text" id="hostname-regex" placeholder="Bijv. ^web.* of .*db.*" />
+
+    <table id="cmdbTable" class="display nowrap">
+        <thead>
+            <tr>
+                <th>Hostname</th>
+                <th>FQDN</th>
+                <th>IP Adres(sen)</th>
+                <th>OS</th>
+                <th>Architectuur</th>
+                <th>CPU</th>
+                <th>RAM (MB)</th>
+            </tr>
+            <tr>
+                <th></th>
+                <th></th>
+                <th></th>
+                <th></th>
+                <th></th>
+                <th></th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in items %}
+            <tr>
+                <td><a href="/host/{{ item.hostname }}">{{ item.hostname }}</a></td>
+                <td>{{ item.fqdn }}</td>
+                <td>{{ item.ip }}</td>
+                <td>{{ item.os }}</td>
+                <td>{{ item.architecture }}</td>
+                <td>{{ item.cpu }}</td>
+                <td>{{ item.memory_mb }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <script>
+        $(document).ready(function () {
+            const table = $('#cmdbTable').DataTable({
+                dom: 'Bfrtip',
+                buttons: [
+                    {
+                        extend: 'colvis',
+                        text: 'Zichtbare kolommen',
+                        columns: ':not(:first-child)'
+                    },
+                    {
+                        extend: 'csvHtml5',
+                        text: 'Exporteer CSV',
+                        title: 'CMDB_export',
+                        exportOptions: { columns: ':visible' }
+                    },
+                    {
+                        extend: 'excelHtml5',
+                        text: 'Exporteer Excel',
+                        title: 'CMDB_export',
+                        exportOptions: { columns: ':visible' }
+                    }
+                ]
+            });
+
+            // Regex filter op hostname
+            $('#hostname-regex').on('keyup change', function () {
+                const val = this.value;
+                table.column(0).search(val, true, false).draw();
+            });
+
+            // Dropdown filters in thead
+            $('#cmdbTable thead tr:eq(1) th').each(function (i) {
+                if (i === 0) return;
+
+                const title = $('#cmdbTable thead tr:eq(0) th').eq(i).text();
+                const column = table.column(i);
+                const select = $('<select multiple class="filter-select"></select>')
+                    .appendTo($(this).empty())
+                    .on('change', function () {
+                        const vals = $(this).val();
+                        if (vals && vals.length > 0) {
+                            const regex = vals.map(v => `^${v.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`).join('|');
+                            column.search(regex, true, false).draw();
+                        } else {
+                            column.search('').draw();
+                        }
+                    });
+
+                column.data().unique().sort().each(function (d) {
+                    if (d) select.append(`<option value="${d}">${d}</option>`);
+                });
+
+                select.select2({
+                    placeholder: `Filter ${title}`,
+                    width: 'resolve'
+                });
+            });
+        });
+    </script>
+</body>
+<div class="footer">
+  <p>Made by Guido Martens</p>
+</div>
+</html>
