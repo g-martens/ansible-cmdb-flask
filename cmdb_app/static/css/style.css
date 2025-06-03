@@ -3,7 +3,17 @@ body {
   padding: 0;
   font-family: Arial, sans-serif;
   background-color: #ececec;
+  font-family: Arial, sans-serif; padding: 20px; }
+  table { width: 100%; }
+  a { color: blue; text-decoration: none; }
+  .filter-select { width: 100%; }
+  label { font-weight: bold; }
+  #hostname-regex { margin-left: 10px; width: 300px; }
+  .chart-row { display: flex; gap: 40px; margin-bottom: 30px; }
+  #osChartContainer, #versionChartContainer { width: 400px; }
+  #reset-filters { margin: 10px 0 20px 0; padding: 5px 10px; font-weight: bold; cursor: pointer; 
 }
+
 
 header {
   background-color: black;
@@ -17,6 +27,8 @@ header {
   box-sizing: border-box;
   padding: 0 20px;
 }
+
+
 
 .logo {
   position: absolute;
