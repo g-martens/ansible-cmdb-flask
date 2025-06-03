@@ -45,6 +45,15 @@
     <hr></hr>
     <label for="hostname-regex">🔍 Regex filter op Hostname:</label>
     <input type="text" id="hostname-regex" placeholder="Bijv. ^web.* of .*db.*" />
+    <label for="rows-per-page">📄 Regels per pagina:</label>
+    <select id="rows-per-page">
+        <option value="10">10</option>
+        <option value="25">25</option>
+        <option value="50">50</option>
+        <option value="100" selected>100</option>
+        <option value="250">250</option>
+        <option value="500">500</option>
+    </select>
 
     <table id="cmdbTable" class="display nowrap">
         <thead>
@@ -58,17 +67,19 @@
                 <th>CPU</th>
                 <th>RAM (MB)</th>
             </tr>
-            <tr>
-                <th></th>
-                <th></th>
-                <th></th>
-                <th></th>
-                <th></th>
-                <th></th>
-                <th></th>
-                <th></th>
-            </tr>
         </thead>
+            <tfoot>
+                <tr>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                </tr>
+            </tfoot>
         <tbody>
             {% for item in items %}
             <tr>
@@ -89,6 +100,8 @@
         $(document).ready(function () {
             const table = $('#cmdbTable').DataTable({
                 dom: 'Bfrtip',
+                pageLength: 100,
+                lengthChange: false,
                 buttons: [
                     { extend: 'colvis', text: 'Zichtbare kolommen', columns: ':not(:first-child)' },
                     { extend: 'csvHtml5', text: 'Exporteer CSV', title: 'CMDB_export', exportOptions: { columns: ':visible' } },
@@ -96,12 +109,17 @@
                 ]
             });
 
+            $('#rows-per-page').on('change', function () {
+                const val = parseInt($(this).val(), 10);
+                table.page.len(val).draw();
+            });
+
             $('#hostname-regex').on('keyup change', function () {
                 const val = this.value;
                 table.column(0).search(val, true, false).draw();
             });
 
-            $('#cmdbTable thead tr:eq(1) th').each(function (i) {
+            $('#cmdbTable tfoot th').each(function (i) {
                 if (i === 0) return;
 
                 const title = $('#cmdbTable thead tr:eq(0) th').eq(i).text();
