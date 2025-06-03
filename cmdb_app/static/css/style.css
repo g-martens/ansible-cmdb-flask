@@ -10,7 +10,13 @@ body {
   label { font-weight: bold; }
   #hostname-regex { margin-left: 10px; width: 300px; }
   .chart-row { display: flex; gap: 40px; margin-bottom: 30px; }
-  #osChartContainer, #versionChartContainer { width: 400px; }
+  #osChartContainer, #versionChartContainer {
+    width: var(--chart-width, 400px);
+    height: var(--chart-height, 300px); 
+    border-radius: 8px;
+    padding: 10px;
+    }
+
   #reset-filters { margin: 10px 0 20px 0; padding: 5px 10px; font-weight: bold; cursor: pointer; 
 }
 
