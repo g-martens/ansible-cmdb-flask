@@ -31,6 +31,17 @@ table.dataTable tbody tr.selected {
     width: 100% !important;
 }
 
+/* Invalid regex styling */
+.invalid-regex {
+    border-color: #dc3545 !important;
+    background-color: #fff8f8 !important;
+}
+
+.invalid-regex.select2-container .select2-selection {
+    border-color: #dc3545 !important;
+    background-color: #fff8f8 !important;
+}
+
 /* Export styling */
 @media print {
     #cmdbTable thead tr.header-row th {

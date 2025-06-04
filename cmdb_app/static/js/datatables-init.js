@@ -1,5 +1,30 @@
 let mainTable;
 
+function applyFilter(column, value, useRegex) {
+    try {
+        if (!value || (Array.isArray(value) && value.length === 0)) {
+            column.search('').draw();
+            return true;
+        }
+
+        let searchValue;
+        if (Array.isArray(value)) {
+            // Handle multiple values from select2
+            searchValue = value.join('|');
+        } else {
+            // Handle single value from text input
+            searchValue = value;
+        }
+
+        // Apply search
+        column.search(searchValue, useRegex, !useRegex).draw();
+        return true;
+    } catch (e) {
+        console.error('Filter error:', e);
+        return false;
+    }
+}
+
 function initializeDataTable(tableData) {
     const headerRow = $('#cmdbTable thead tr.header-row');
     const filterRow = $('#cmdbTable thead tr.filter-row');
@@ -66,14 +91,11 @@ function initializeDataTable(tableData) {
     // Initialize filters in header
     $('#cmdbTable thead tr.filter-row th').each(function (i) {
         if (i === 0) {
-            // Special handling for hostname column
+            // Simple text filter for hostname
             $(this).html('<input type="text" class="column-filter" placeholder="Filter hostname" />');
             $('input', this).on('keyup change', function () {
-                const val = this.value;
-                const useRegex = $('#use-regex').is(':checked');
-                if (mainTable.column(i).search() !== val) {
-                    mainTable.column(i).search(val, useRegex, !useRegex).draw();
-                }
+                const val = this.value.trim();
+                mainTable.column(i).search(val).draw();
                 updateCharts(mainTable.rows({search: 'applied'}).data().toArray());
             });
         } else {
@@ -82,19 +104,10 @@ function initializeDataTable(tableData) {
                 .appendTo($(this))
                 .on('change', function () {
                     const vals = $(this).val() || [];
-                    const useRegex = $('#use-regex').is(':checked');
-                    
-                    let searchValue = '';
-                    if (vals.length > 0) {
-                        if (useRegex) {
-                            searchValue = vals.join('|');
-                        } else {
-                            searchValue = vals.map(v => `^${v.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`).join('|');
-                        }
+                    const success = applyFilter(mainTable.column(i), vals, true);
+                    if (success) {
+                        updateCharts(mainTable.rows({search: 'applied'}).data().toArray());
                     }
-                    
-                    mainTable.column(i).search(searchValue, true, !useRegex).draw();
-                    updateCharts(mainTable.rows({search: 'applied'}).data().toArray());
                 });
 
             // Get unique values for the column
@@ -131,37 +144,10 @@ function initializeDataTable(tableData) {
         mainTable.rows().deselect();
     });
 
-    // Handle regex checkbox change
-    $('#use-regex').on('change', function () {
-        // Re-apply all current filters with new regex setting
-        const useRegex = $(this).is(':checked');
-        
-        // Update hostname filter
-        const hostnameVal = $('.column-filter').val();
-        if (hostnameVal) {
-            mainTable.column(0).search(hostnameVal, useRegex, !useRegex);
-        }
-
-        // Update all select2 filters
-        $('.filter-select').each(function(i) {
-            const vals = $(this).val() || [];
-            if (vals.length > 0) {
-                const searchValue = useRegex ? vals.join('|') : vals.map(v => `^${v.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`).join('|');
-                mainTable.column(i + 1).search(searchValue, true, !useRegex);
-            }
-        });
-
-        mainTable.draw();
-        updateCharts(mainTable.rows({search: 'applied'}).data().toArray());
-    });
-
     // Reset filters button
     $('#reset-filters').on('click', function () {
-        $('#hostname-regex').val('');
+        $('.column-filter').val('');
         $('.filter-select').val(null).trigger('change');
-        $('#use-regex').prop('checked', false);
-        selectedOs = null;
-        selectedVersion = null;
         mainTable.columns().search('').draw();
         updateCharts(tableData);
     });
@@ -170,14 +156,6 @@ function initializeDataTable(tableData) {
     $('#rows-per-page').on('change', function () {
         const val = parseInt($(this).val(), 10);
         mainTable.page.len(val).draw();
-    });
-
-    // Handle hostname regex filter
-    $('#hostname-regex').on('keyup change', function () {
-        const val = this.value;
-        const useRegex = $('#use-regex').is(':checked');
-        mainTable.column(0).search(val, useRegex, !useRegex).draw();
-        updateCharts(mainTable.rows({search: 'applied'}).data().toArray());
     });
 }
 

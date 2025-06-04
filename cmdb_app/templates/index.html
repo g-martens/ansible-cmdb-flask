@@ -65,14 +65,9 @@
         </div>
 
         <button id="reset-filters">🔄 Reset all filters</button>
-        <label for="use-regex">
-            <input type="checkbox" id="use-regex" /> 🔍 Enable regex in filters
-        </label>
 
         <h2>CMDB Content</h2>
         <hr></hr>
-        <label for="hostname-regex">🔍 Regex filter op Hostname:</label>
-        <input type="text" id="hostname-regex" placeholder="Bijv. ^web.* of .*db.*" />
         <label for="rows-per-page">📄 Regels per pagina:</label>
         <select id="rows-per-page">
             <option value="10">10</option>
@@ -153,13 +148,6 @@
             $('#rows-per-page').on('change', function () {
                 const val = parseInt($(this).val(), 10);
                 mainTable.page.len(val).draw();
-            });
-
-            // Handle hostname regex filter
-            $('#hostname-regex').on('keyup change', function () {
-                const val = this.value;
-                mainTable.column(0).search(val, true, false).draw();
-                updateCharts(mainTable.rows({search: 'applied'}).data().toArray());
             });
         });
     </script>
