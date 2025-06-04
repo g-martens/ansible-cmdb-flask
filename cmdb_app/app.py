@@ -18,13 +18,6 @@ def load_all_facts():
                     # Add the filename without .json as a fallback for hostname
                     if 'ansible_hostname' not in ansible_facts:
                         ansible_facts['ansible_hostname'] = filename[:-5]
-                    
-                    # Debug: Print the structure of ansible_facts
-                    print(f"Facts for {filename}:")
-                    print(f"- hostname: {ansible_facts.get('ansible_hostname')}")
-                    print(f"- processor_count: {ansible_facts.get('ansible_processor_count')}")
-                    print(f"- distribution: {ansible_facts.get('ansible_distribution')}")
-                    
                     all_facts.append(ansible_facts)
                 except json.JSONDecodeError as e:
                     print(f"Error loading {filename}: {e}")

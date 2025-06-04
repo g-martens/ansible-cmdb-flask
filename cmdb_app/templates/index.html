@@ -25,7 +25,7 @@
     <script src="/static/js/buttons.colVis.min.js"></script>
     <script src="/static/js/jszip.min.js"></script>
     <script src="/static/js/select2.min.js"></script>
-    <script src="/static/js/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.datatables.net/select/1.7.0/js/dataTables.select.min.js"></script>
 </head>
 
@@ -33,7 +33,7 @@
     <header>
         <div class="header-content">
             <div class="logo">
-                <img src="/static/images/Tux.svg.png" alt="Tux Linux Mascotte" />
+                <img src="/static/images/Tux.svg.png" alt="Tux Linux Mascot" />
             </div>
             <h1>Ansible CMDB</h1>
         </div>
@@ -66,21 +66,12 @@
 
         <button id="reset-filters">🔄 Reset all filters</button>
 
-        <h2>CMDB Content</h2>
+        <h2 class="content-heading">CMDB Content</h2>
         <hr></hr>
-        <label for="rows-per-page">📄 Regels per pagina:</label>
-        <select id="rows-per-page">
-            <option value="10">10</option>
-            <option value="25">25</option>
-            <option value="50">50</option>
-            <option value="100" selected>100</option>
-            <option value="250">250</option>
-            <option value="500">500</option>
-        </select>
 
         <div id="selection-info">
-            <span id="selected-count">0 rijen geselecteerd</span>
-            <button id="clear-selection" style="margin-left: 10px;">Selectie wissen</button>
+            <span id="selected-count">0 rows selected</span>
+            <button id="clear-selection">Clear Selection</button>
         </div>
 
         <table id="cmdbTable" class="display nowrap">
@@ -112,11 +103,11 @@
     </script>
 
     <!-- Application JavaScript -->
+    <script src="/static/js/table-utils.js"></script>
     <script src="/config/columns.js"></script>
     <script src="/static/js/datatables-init.js"></script>
     <script src="/static/js/charts-init.js"></script>
     <script>
-        let osChart;
         let selectedOs = null;
         let selectedVersion = null;
 
@@ -125,7 +116,7 @@
             selectedVersion = null;
             mainTable.column(1).search('').draw();
             document.querySelectorAll('#versionTable tr').forEach(r => r.classList.remove('selected'));
-            updateCharts();
+            updateCharts(JSON.parse(document.getElementById('table-data').textContent));
         }
 
         function clearVersionFilter() {
@@ -136,37 +127,14 @@
                 mainTable.column(1).search('').column(2).search('').draw();
             }
             document.querySelectorAll('#versionTable tr').forEach(r => r.classList.remove('selected'));
-            updateCharts();
+            updateCharts(JSON.parse(document.getElementById('table-data').textContent));
         }
 
         $(document).ready(function () {
             const tableData = JSON.parse(document.getElementById('table-data').textContent);
             initializeDataTable(tableData);
             updateCharts(tableData);
-
-            // Handle rows per page change
-            $('#rows-per-page').on('change', function () {
-                const val = parseInt($(this).val(), 10);
-                mainTable.page.len(val).draw();
-            });
         });
     </script>
-
-    <style>
-    /* Add styling for selected rows */
-    table.dataTable tbody tr.selected {
-        background-color: #b0bed9 !important;
-    }
-    
-    /* Add styling for selection info */
-    #selection-info {
-        margin: 10px 0;
-        padding: 10px;
-        background-color: #f8f9fa;
-        border: 1px solid #dee2e6;
-        border-radius: 4px;
-        display: none;
-    }
-    </style>
 </body>
 </html>

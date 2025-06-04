@@ -1,5 +1,3 @@
-let mainTable;
-
 function applyFilter(column, value, useRegex) {
     try {
         if (!value || (Array.isArray(value) && value.length === 0)) {
@@ -25,118 +23,68 @@ function applyFilter(column, value, useRegex) {
     }
 }
 
-function initializeDataTable(tableData) {
-    const headerRow = $('#cmdbTable thead tr.header-row');
-    const filterRow = $('#cmdbTable thead tr.filter-row');
-    
-    // Add headers and filter cells
-    tableColumns.forEach(column => {
-        headerRow.append(`<th>${column.title}</th>`);
-        filterRow.append('<th></th>');
-    });
+function initializeDataTable(data) {
+    console.log('Initializing DataTable with data:', data);
 
+    // Create DataTable
     mainTable = $('#cmdbTable').DataTable({
-        data: tableData,
-        columns: tableColumns,
-        dom: 'Bfrtip',
+        data: data,
+        columns: window.tableColumns,
         pageLength: 100,
-        lengthChange: false,
-        orderCellsTop: true,
-        fixedHeader: true,
-        select: {
-            style: 'multi',
-            selector: 'td'
-        },
+        dom: 'Blfrtip',
         buttons: [
+            'copy', 'csv', 'excel',
             {
                 extend: 'colvis',
-                text: 'Zichtbare kolommen',
-                columns: ':not(:first-child)'
-            },
-            {
-                extend: 'csvHtml5',
-                text: 'Exporteer CSV',
-                title: 'CMDB_export',
-                exportOptions: {
-                    columns: ':visible',
-                    rows: function(idx, data, node) {
-                        return $(node).hasClass('selected') || mainTable.rows('.selected').nodes().length === 0;
-                    },
-                    format: {
-                        header: function (data, columnIdx) {
-                            return tableColumns[columnIdx].title;
-                        }
-                    }
-                }
-            },
-            {
-                extend: 'excelHtml5',
-                text: 'Exporteer Excel',
-                title: 'CMDB_export',
-                exportOptions: {
-                    columns: ':visible',
-                    rows: function(idx, data, node) {
-                        return $(node).hasClass('selected') || mainTable.rows('.selected').nodes().length === 0;
-                    },
-                    format: {
-                        header: function (data, columnIdx) {
-                            return tableColumns[columnIdx].title;
-                        }
-                    }
-                }
+                columns: ':not(.noVis)'
             }
-        ]
-    });
+        ],
+        order: [[0, 'asc']],
+        select: true,
+        initComplete: function() {
+            this.api().columns().every(function(columnIndex) {
+                const column = this;
+                const columnDef = window.tableColumns[columnIndex];
+                
+                // Skip columns that shouldn't have filters
+                if (columnDef && columnDef.noFilter) {
+                    return;
+                }
 
-    // Initialize filters in header
-    $('#cmdbTable thead tr.filter-row th').each(function (i) {
-        if (i === 0) {
-            // Simple text filter for hostname
-            $(this).html('<input type="text" class="column-filter" placeholder="Filter hostname" />');
-            $('input', this).on('keyup change', function () {
-                const val = this.value.trim();
-                mainTable.column(i).search(val).draw();
-                updateCharts(mainTable.rows({search: 'applied'}).data().toArray());
-            });
-        } else {
-            // Create select2 dropdowns for other columns
-            const select = $('<select multiple class="filter-select"></select>')
-                .appendTo($(this))
-                .on('change', function () {
-                    const vals = $(this).val() || [];
-                    const success = applyFilter(mainTable.column(i), vals, true);
-                    if (success) {
-                        updateCharts(mainTable.rows({search: 'applied'}).data().toArray());
-                    }
-                });
+                // Create filter cell
+                const filterCell = $('<td></td>');
+                
+                // Create and append filter input
+                const input = $('<input type="text" class="column-filter" placeholder="Filter...">')
+                    .appendTo(filterCell)
+                    .on('keyup change', function() {
+                        const searchValue = $(this).val();
+                        if (column.search() !== searchValue) {
+                            column.search(searchValue).draw();
+                        }
+                    });
 
-            // Get unique values for the column
-            const uniqueValues = new Set();
-            mainTable.column(i).data().each(function(d, j) {
-                const value = tableColumns[i].render(d, 'filter', mainTable.row(j).data());
-                if (value) uniqueValues.add(value);
+                // Add filter cell to filter row
+                $('.filter-row').append(filterCell);
             });
 
-            // Add options to select
-            Array.from(uniqueValues)
-                .sort()
-                .forEach(value => {
-                    select.append(`<option value="${value}">${value}</option>`);
-                });
-
-            // Initialize select2
-            select.select2({
-                placeholder: `Filter ${tableColumns[i].title}`,
-                width: '100%'
-            });
+            // Add header cells
+            $('.header-row').html(
+                window.tableColumns.map(col => 
+                    `<th>${col.title || ''}</th>`
+                ).join('')
+            );
         }
     });
 
-    // Handle selection changes
-    mainTable.on('select deselect', function () {
-        var selectedRows = mainTable.rows('.selected').count();
-        $('#selected-count').text(selectedRows + ' rijen geselecteerd');
-        $('#selection-info').toggle(selectedRows > 0);
+    // Handle row selection
+    const $selectionInfo = $('#selection-info');
+    const $selectedCount = $('#selected-count');
+    
+    mainTable.on('select deselect', function() {
+        const selectedRows = mainTable.rows({ selected: true }).count();
+        $selectedCount.text(`${selectedRows} ${selectedRows === 1 ? 'rij' : 'rijen'} geselecteerd`);
+        $selectionInfo.toggle(selectedRows > 0);
     });
 
     // Clear selection button
@@ -145,19 +93,17 @@ function initializeDataTable(tableData) {
     });
 
     // Reset filters button
-    $('#reset-filters').on('click', function () {
+    $('#reset-filters').on('click', function() {
+        // Clear all filter inputs
         $('.column-filter').val('');
-        $('.filter-select').val(null).trigger('change');
-        mainTable.columns().search('').draw();
-        updateCharts(tableData);
+        // Clear DataTable search
+        mainTable.search('').columns().search('').draw();
+        // Clear OS and version filters
+        selectedOs = null;
+        selectedVersion = null;
+        // Update charts
+        updateCharts(data);
+        // Remove selection from version table
+        document.querySelectorAll('#versionTable tr').forEach(r => r.classList.remove('selected'));
     });
-
-    // Handle rows per page change
-    $('#rows-per-page').on('change', function () {
-        const val = parseInt($(this).val(), 10);
-        mainTable.page.len(val).draw();
-    });
-}
-
-// Export the mainTable for use in other scripts
-window.mainTable = mainTable; 
+} 

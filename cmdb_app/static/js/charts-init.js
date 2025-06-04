@@ -1,3 +1,8 @@
+function findColumnIndexById(table, columnId) {
+    const columns = table.settings()[0].aoColumns;
+    return columns.findIndex(col => col.id === columnId);
+}
+
 function updateVersionTable(data, selectedOs = null) {
     const versions = new Map();
     
@@ -35,80 +40,118 @@ function updateVersionTable(data, selectedOs = null) {
             }
 
             row.addEventListener('click', () => {
+                const tableData = JSON.parse(document.getElementById('table-data').textContent);
                 if (selectedVersion === v.version && selectedOs === v.os) {
                     // Deselect
                     selectedVersion = null;
                     selectedOs = null;
                     document.querySelectorAll('#versionTable tr').forEach(r => r.classList.remove('selected'));
-                    mainTable.column(1).search('').column(2).search('').draw();
+                    mainTable.columns().search('').draw();
                 } else {
                     // Select new version
                     selectedVersion = v.version;
                     selectedOs = v.os;
                     document.querySelectorAll('#versionTable tr').forEach(r => r.classList.remove('selected'));
                     row.classList.add('selected');
-                    mainTable.column(1).search(`^${v.os}$`, true, false)
-                           .column(2).search(`^${v.version}$`, true, false)
-                           .draw();
+                    
+                    // Find column indices by their IDs
+                    const osColumnIndex = findColumnIndexById(mainTable, 'os');
+                    const versionColumnIndex = findColumnIndexById(mainTable, 'os_version');
+                    
+                    // Apply the filters using the correct indices
+                    if (osColumnIndex !== -1 && versionColumnIndex !== -1) {
+                        mainTable.column(osColumnIndex).search(`^${v.os}$`, true, false)
+                                .column(versionColumnIndex).search(`^${v.version}$`, true, false)
+                                .draw();
+                    }
                 }
-                updateCharts();
+                updateCharts(tableData);
             });
         });
 }
 
-function updateCharts(filteredData = null) {
-    const data = filteredData || JSON.parse(document.getElementById('table-data').textContent);
-    
-    // Count OS distributions
-    const osCounts = new Map();
-    data.forEach(row => {
-        const os = row.ansible_distribution || 'Unknown';
-        osCounts.set(os, (osCounts.get(os) || 0) + 1);
-    });
-
-    // Update pie chart
-    if (osChart) {
-        osChart.destroy();
+function updateCharts(data) {
+    if (!data) {
+        return;
     }
 
-    const osLabels = Array.from(osCounts.keys());
-    const osData = Array.from(osCounts.values());
-    const colors = osLabels.map((_, i) => `hsl(${i * 360 / osLabels.length}, 70%, 60%)`);
+    // Get OS distribution data
+    const osData = {};
+    data.forEach(row => {
+        try {
+            const os = row.ansible_distribution || 'Unknown';
+            osData[os] = (osData[os] || 0) + 1;
+        } catch (e) {
+            // Silent error handling
+        }
+    });
 
-    osChart = new Chart(document.getElementById('osChart'), {
+    // Sort OS data by count
+    const sortedOsData = Object.entries(osData)
+        .sort((a, b) => b[1] - a[1]);
+
+    // Create OS chart
+    const osCtx = document.getElementById('osChart');
+    if (!osCtx) {
+        return;
+    }
+
+    // Destroy existing chart if it exists
+    if (window.osChart && typeof window.osChart.destroy === 'function') {
+        window.osChart.destroy();
+    }
+    
+    // Create new chart
+    window.osChart = new Chart(osCtx, {
         type: 'pie',
         data: {
-            labels: osLabels,
+            labels: sortedOsData.map(([os]) => os),
             datasets: [{
-                data: osData,
-                backgroundColor: colors
+                data: sortedOsData.map(([, count]) => count),
+                backgroundColor: [
+                    '#FF6384',
+                    '#36A2EB',
+                    '#FFCE56',
+                    '#4BC0C0',
+                    '#9966FF',
+                    '#FF9F40'
+                ]
             }]
         },
         options: {
             responsive: true,
             plugins: {
                 legend: {
-                    position: 'bottom'
+                    position: 'right'
                 }
             },
             onClick: (event, elements) => {
+                const tableData = JSON.parse(document.getElementById('table-data').textContent);
                 if (elements.length > 0) {
                     const index = elements[0].index;
-                    const os = osLabels[index];
+                    const os = sortedOsData[index][0];
                     
                     if (selectedOs === os) {
-                        // Deselect
+                        // Deselect if clicking the same OS
                         selectedOs = null;
                         selectedVersion = null;
-                        mainTable.column(1).search('').draw();
+                        mainTable.columns().search('').draw();
                     } else {
                         // Select new OS
                         selectedOs = os;
                         selectedVersion = null;
-                        mainTable.column(1).search(`^${os}$`, true, false).draw();
+                        
+                        // Find column index by ID
+                        const osColumnIndex = findColumnIndexById(mainTable, 'os');
+                        
+                        // Apply the filter using the correct index
+                        if (osColumnIndex !== -1) {
+                            mainTable.column(osColumnIndex).search(`^${os}$`, true, false).draw();
+                        }
                     }
                     
-                    updateVersionTable(data, selectedOs);
+                    // Update version table with filtered data
+                    updateVersionTable(tableData, selectedOs);
                 }
             }
         }

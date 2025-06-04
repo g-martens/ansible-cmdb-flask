@@ -48,4 +48,20 @@ table.dataTable tbody tr.selected {
         background-color: #fff !important;
         color: #000 !important;
     }
+}
+
+.ip-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.ip-list li {
+    padding: 2px 0;
+    white-space: nowrap;
+}
+
+/* Add a comma between IP addresses except for the last one */
+.ip-list li:not(:last-child)::after {
+    content: ",";
 } 
