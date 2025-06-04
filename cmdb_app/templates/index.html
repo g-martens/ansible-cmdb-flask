@@ -2,13 +2,22 @@
 <html>
 <head>
     <meta charset="UTF-8" />
+    <link rel="icon" type="image/x-icon" href="/static/images/Tux.svg.png" />
     <title>CMDB Overview</title>
 
+    <!-- DataTables CSS -->
     <link rel="stylesheet" href="/static/css/jquery.dataTables.min.css" />
-    <link rel="stylesheet" href="/static/css/jbuttons.dataTables.min.css" />
+    <link rel="stylesheet" href="/static/css/buttons.dataTables.min.css" />
+    <link rel="stylesheet" href="https://cdn.datatables.net/select/1.7.0/css/select.dataTables.min.css" />
+    
+    <!-- Other CSS -->
     <link rel="stylesheet" href="/static/css/select2.min.css" />
     <link rel="stylesheet" href="/static/css/style.css" />
+    <link rel="stylesheet" href="/static/css/charts.css" />
+    <link rel="stylesheet" href="/static/css/datatables.css" />
+    <link rel="stylesheet" href="/config/custom.css" />
 
+    <!-- JavaScript Libraries -->
     <script src="/static/js/jquery-3.7.0.min.js"></script>
     <script src="/static/js/jquery.dataTables.min.js"></script>
     <script src="/static/js/dataTables.buttons.min.js"></script>
@@ -16,129 +25,116 @@
     <script src="/static/js/buttons.colVis.min.js"></script>
     <script src="/static/js/jszip.min.js"></script>
     <script src="/static/js/select2.min.js"></script>
-
-    <style>
-        body { font-family: Arial, sans-serif; padding: 20px; }
-        table { width: 100%; }
-        a { color: blue; text-decoration: none; }
-        .filter-select { width: 100%; }
-        label { font-weight: bold; }
-        #hostname-regex { margin-left: 10px; width: 300px; }
-    </style>
-    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.datatables.net/select/1.7.0/js/dataTables.select.min.js"></script>
 </head>
 
-<header>
-  <div class="logo">
-    <img src="/static/images/Tux.svg.png" alt="Tux Linux Mascotte" />
-  </div>
-  <h1>Ansible CMDB</h1>
-</header>
-
 <body>
-    <h1>CMDB - Ansible Facts Overzicht</h1>
+    <header>
+        <div class="header-content">
+            <div class="logo">
+                <img src="/static/images/Tux.svg.png" alt="Tux Linux Mascot" />
+            </div>
+            <h1>Ansible CMDB</h1>
+        </div>
+    </header>
 
-    <label for="hostname-regex">🔍 Regex filter op Hostname:</label>
-    <input type="text" id="hostname-regex" placeholder="Bijv. ^web.* of .*db.*" />
+    <main>
+        <div class="charts-container">
+            <div class="chart-section">
+                <div class="chart-title">Operating System Distribution</div>
+                <canvas id="osChart"></canvas>
+                <button class="clear-filters" onclick="clearOsFilter()">Clear OS Filter</button>
+            </div>
+            <div class="chart-section">
+                <div class="chart-title">OS Versions</div>
+                <table class="version-table" id="versionTable">
+                    <thead>
+                        <tr>
+                            <th>OS Family</th>
+                            <th>Version</th>
+                            <th>Count</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Will be populated by JavaScript -->
+                    </tbody>
+                </table>
+                <button class="clear-filters" onclick="clearVersionFilter()">Clear Version Filter</button>
+            </div>
+        </div>
 
-    <table id="cmdbTable" class="display nowrap">
-        <thead>
-            <tr>
-                <th>Hostname</th>
-                <th>FQDN</th>
-                <th>IP Adres(sen)</th>
-                <th>OS</th>
-                <th>Architectuur</th>
-                <th>CPU</th>
-                <th>RAM (MB)</th>
-            </tr>
-            <tr>
-                <th></th>
-                <th></th>
-                <th></th>
-                <th></th>
-                <th></th>
-                <th></th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for item in items %}
-            <tr>
-                <td><a href="/host/{{ item.hostname }}">{{ item.hostname }}</a></td>
-                <td>{{ item.fqdn }}</td>
-                <td>{{ item.ip }}</td>
-                <td>{{ item.os }}</td>
-                <td>{{ item.architecture }}</td>
-                <td>{{ item.cpu }}</td>
-                <td>{{ item.memory_mb }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+        <button id="reset-filters">🔄 Reset all filters</button>
 
+        <h2 class="content-heading">CMDB Content</h2>
+        <hr></hr>
+
+        <div id="selection-info">
+            <span id="selected-count">0 rows selected</span>
+            <button id="clear-selection">Clear Selection</button>
+        </div>
+
+        <table id="cmdbTable" class="display nowrap">
+            <thead>
+                <tr class="header-row">
+                    <!-- Dynamic headers will be inserted here by JavaScript -->
+                </tr>
+                <tr class="filter-row">
+                    <!-- Dynamic filter cells will be inserted here by JavaScript -->
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                <tr>
+                    <!-- Dynamic data cells will be inserted here by JavaScript -->
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </main>
+
+    <div class="footer">
+        <p>Made by Guido Martens</p>
+    </div>
+
+    <!-- Template data -->
+    <script type="application/json" id="table-data">
+        {{ items|tojson|safe }}
+    </script>
+
+    <!-- Application JavaScript -->
+    <script src="/static/js/table-utils.js"></script>
+    <script src="/config/columns.js"></script>
+    <script src="/static/js/datatables-init.js"></script>
+    <script src="/static/js/charts-init.js"></script>
     <script>
+        let selectedOs = null;
+        let selectedVersion = null;
+
+        function clearOsFilter() {
+            selectedOs = null;
+            selectedVersion = null;
+            mainTable.column(1).search('').draw();
+            document.querySelectorAll('#versionTable tr').forEach(r => r.classList.remove('selected'));
+            updateCharts(JSON.parse(document.getElementById('table-data').textContent));
+        }
+
+        function clearVersionFilter() {
+            selectedVersion = null;
+            if (selectedOs) {
+                mainTable.column(1).search(`^${selectedOs}$`, true, false).column(2).search('').draw();
+            } else {
+                mainTable.column(1).search('').column(2).search('').draw();
+            }
+            document.querySelectorAll('#versionTable tr').forEach(r => r.classList.remove('selected'));
+            updateCharts(JSON.parse(document.getElementById('table-data').textContent));
+        }
+
         $(document).ready(function () {
-            const table = $('#cmdbTable').DataTable({
-                dom: 'Bfrtip',
-                buttons: [
-                    {
-                        extend: 'colvis',
-                        text: 'Zichtbare kolommen',
-                        columns: ':not(:first-child)'
-                    },
-                    {
-                        extend: 'csvHtml5',
-                        text: 'Exporteer CSV',
-                        title: 'CMDB_export',
-                        exportOptions: { columns: ':visible' }
-                    },
-                    {
-                        extend: 'excelHtml5',
-                        text: 'Exporteer Excel',
-                        title: 'CMDB_export',
-                        exportOptions: { columns: ':visible' }
-                    }
-                ]
-            });
-
-            // Regex filter op hostname
-            $('#hostname-regex').on('keyup change', function () {
-                const val = this.value;
-                table.column(0).search(val, true, false).draw();
-            });
-
-            // Dropdown filters in thead
-            $('#cmdbTable thead tr:eq(1) th').each(function (i) {
-                if (i === 0) return;
-
-                const title = $('#cmdbTable thead tr:eq(0) th').eq(i).text();
-                const column = table.column(i);
-                const select = $('<select multiple class="filter-select"></select>')
-                    .appendTo($(this).empty())
-                    .on('change', function () {
-                        const vals = $(this).val();
-                        if (vals && vals.length > 0) {
-                            const regex = vals.map(v => `^${v.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`).join('|');
-                            column.search(regex, true, false).draw();
-                        } else {
-                            column.search('').draw();
-                        }
-                    });
-
-                column.data().unique().sort().each(function (d) {
-                    if (d) select.append(`<option value="${d}">${d}</option>`);
-                });
-
-                select.select2({
-                    placeholder: `Filter ${title}`,
-                    width: 'resolve'
-                });
-            });
+            const tableData = JSON.parse(document.getElementById('table-data').textContent);
+            initializeDataTable(tableData);
+            updateCharts(tableData);
         });
     </script>
 </body>
-<div class="footer">
-  <p>Made by Guido Martens</p>
-</div>
 </html>

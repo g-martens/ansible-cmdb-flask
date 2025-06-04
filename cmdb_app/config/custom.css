@@ -1,0 +1,45 @@
+/* Custom CSS Configuration File
+ * Use this file to override the default styling of the CMDB interface
+ * Your CSS rules here will take precedence over the default styles
+ */
+
+/* Example overrides (uncomment and modify as needed):
+
+/* Custom Header Colors 
+header {
+    background-color: #2c3e50;
+}
+
+/* Custom Footer Style 
+.footer {
+    background-color: #2c3e50;
+}
+
+/* Custom Table Styling 
+#cmdbTable {
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+/* Custom Chart Container Styling 
+.chart-section {
+    background-color: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Custom Button Styling 
+.clear-filters {
+    background-color: #3498db;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+}
+
+/* Custom Font 
+body {
+    font-family: 'Your-Font-Here', Arial, sans-serif;
+}
+
+*/ 
