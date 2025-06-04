@@ -118,7 +118,7 @@ const tableColumns = [
         visible: true,
         render: function(data, type, row) {
             try {
-                const count = jsonxs(row, 'ansible_processor_count', 0);
+                const count = jsonxs(row, 'ansible_processor_cores', 0);
                 if (type === 'display') {
                     return count.toString();
                 }
