@@ -23,11 +23,21 @@ function applyFilter(column, value, useRegex) {
     }
 }
 
+function convertToRegex(input) {
+    // Escape special regex characters except * and |
+    let regex = input.replace(/[.+?^${}()\[\]\\]/g, '\\$&');
+    
+    // Convert * to .*
+    regex = regex.replace(/\*/g, '.*');
+    
+    return regex;
+}
+
 function initializeDataTable(data) {
     console.log('Initializing DataTable with data:', data);
 
     // Create DataTable
-    mainTable = $('#cmdbTable').DataTable({
+    window.mainTable = $('#cmdbTable').DataTable({
         data: data,
         columns: window.tableColumns,
         pageLength: 100,
@@ -42,7 +52,17 @@ function initializeDataTable(data) {
         order: [[0, 'asc']],
         select: true,
         initComplete: function() {
-            this.api().columns().every(function(columnIndex) {
+            const api = this.api();
+            
+            // Add header cells first
+            $('.header-row').html(
+                window.tableColumns.map(col => 
+                    `<th>${col.title || ''}</th>`
+                ).join('')
+            );
+
+            // Setup filters for each column
+            api.columns().every(function(columnIndex) {
                 const column = this;
                 const columnDef = window.tableColumns[columnIndex];
                 
@@ -55,25 +75,28 @@ function initializeDataTable(data) {
                 const filterCell = $('<td></td>');
                 
                 // Create and append filter input
-                const input = $('<input type="text" class="column-filter" placeholder="Filter...">')
-                    .appendTo(filterCell)
-                    .on('keyup change', function() {
-                        const searchValue = $(this).val();
-                        if (column.search() !== searchValue) {
-                            column.search(searchValue).draw();
+                const input = $('<input type="text" class="column-filter" placeholder="Filter... (use * for wildcard)">')
+                    .appendTo(filterCell);
+
+                // Handle input events
+                input.on('keyup change', function() {
+                    if (column.search() !== this.value) {
+                        try {
+                            const regexValue = convertToRegex(this.value);
+                            column.search(regexValue, true, false).draw();
+                        } catch (e) {
+                            console.error('Search error:', e);
+                            // Invalid regex - don't update the search
+                            $(this).addClass('invalid-regex');
+                            return;
                         }
-                    });
+                        $(this).removeClass('invalid-regex');
+                    }
+                });
 
                 // Add filter cell to filter row
                 $('.filter-row').append(filterCell);
             });
-
-            // Add header cells
-            $('.header-row').html(
-                window.tableColumns.map(col => 
-                    `<th>${col.title || ''}</th>`
-                ).join('')
-            );
         }
     });
 
@@ -81,15 +104,15 @@ function initializeDataTable(data) {
     const $selectionInfo = $('#selection-info');
     const $selectedCount = $('#selected-count');
     
-    mainTable.on('select deselect', function() {
-        const selectedRows = mainTable.rows({ selected: true }).count();
+    window.mainTable.on('select deselect', function() {
+        const selectedRows = window.mainTable.rows({ selected: true }).count();
         $selectedCount.text(`${selectedRows} ${selectedRows === 1 ? 'rij' : 'rijen'} geselecteerd`);
         $selectionInfo.toggle(selectedRows > 0);
     });
 
     // Clear selection button
     $('#clear-selection').on('click', function() {
-        mainTable.rows().deselect();
+        window.mainTable.rows().deselect();
     });
 
     // Reset filters button
@@ -97,7 +120,7 @@ function initializeDataTable(data) {
         // Clear all filter inputs
         $('.column-filter').val('');
         // Clear DataTable search
-        mainTable.search('').columns().search('').draw();
+        window.mainTable.search('').columns().search('').draw();
         // Clear OS and version filters
         selectedOs = null;
         selectedVersion = null;
