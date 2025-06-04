@@ -5,11 +5,19 @@
     <link rel="icon" type="image/x-icon" href="/static/images/Tux.svg.png" />
     <title>CMDB Overview</title>
 
+    <!-- DataTables CSS -->
     <link rel="stylesheet" href="/static/css/jquery.dataTables.min.css" />
     <link rel="stylesheet" href="/static/css/buttons.dataTables.min.css" />
+    <link rel="stylesheet" href="https://cdn.datatables.net/select/1.7.0/css/select.dataTables.min.css" />
+    
+    <!-- Other CSS -->
     <link rel="stylesheet" href="/static/css/select2.min.css" />
     <link rel="stylesheet" href="/static/css/style.css" />
+    <link rel="stylesheet" href="/static/css/charts.css" />
+    <link rel="stylesheet" href="/static/css/datatables.css" />
+    <link rel="stylesheet" href="/config/custom.css" />
 
+    <!-- JavaScript Libraries -->
     <script src="/static/js/jquery-3.7.0.min.js"></script>
     <script src="/static/js/jquery.dataTables.min.js"></script>
     <script src="/static/js/dataTables.buttons.min.js"></script>
@@ -18,209 +26,159 @@
     <script src="/static/js/jszip.min.js"></script>
     <script src="/static/js/select2.min.js"></script>
     <script src="/static/js/chart.js"></script>
-
+    <script src="https://cdn.datatables.net/select/1.7.0/js/dataTables.select.min.js"></script>
 </head>
 
-<header>
-  <div class="logo">
-    <img src="/static/images/Tux.svg.png" alt="Tux Linux Mascotte" />
-  </div>
-  <h1>Ansible CMDB</h1>
-</header>
-
 <body>
+    <header>
+        <div class="header-content">
+            <div class="logo">
+                <img src="/static/images/Tux.svg.png" alt="Tux Linux Mascotte" />
+            </div>
+            <h1>Ansible CMDB</h1>
+        </div>
+    </header>
 
-    <div class="chart-row">
-        <div id="osChartContainer">
-            <canvas id="osChart"></canvas>
+    <main>
+        <div class="charts-container">
+            <div class="chart-section">
+                <div class="chart-title">Operating System Distribution</div>
+                <canvas id="osChart"></canvas>
+                <button class="clear-filters" onclick="clearOsFilter()">Clear OS Filter</button>
+            </div>
+            <div class="chart-section">
+                <div class="chart-title">OS Versions</div>
+                <table class="version-table" id="versionTable">
+                    <thead>
+                        <tr>
+                            <th>OS Family</th>
+                            <th>Version</th>
+                            <th>Count</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Will be populated by JavaScript -->
+                    </tbody>
+                </table>
+                <button class="clear-filters" onclick="clearVersionFilter()">Clear Version Filter</button>
+            </div>
         </div>
-        <div id="versionChartContainer">
-            <canvas id="versionChart"></canvas>
+
+        <button id="reset-filters">🔄 Reset all filters</button>
+        <label for="use-regex">
+            <input type="checkbox" id="use-regex" /> 🔍 Enable regex in filters
+        </label>
+
+        <h2>CMDB Content</h2>
+        <hr></hr>
+        <label for="hostname-regex">🔍 Regex filter op Hostname:</label>
+        <input type="text" id="hostname-regex" placeholder="Bijv. ^web.* of .*db.*" />
+        <label for="rows-per-page">📄 Regels per pagina:</label>
+        <select id="rows-per-page">
+            <option value="10">10</option>
+            <option value="25">25</option>
+            <option value="50">50</option>
+            <option value="100" selected>100</option>
+            <option value="250">250</option>
+            <option value="500">500</option>
+        </select>
+
+        <div id="selection-info">
+            <span id="selected-count">0 rijen geselecteerd</span>
+            <button id="clear-selection" style="margin-left: 10px;">Selectie wissen</button>
         </div>
+
+        <table id="cmdbTable" class="display nowrap">
+            <thead>
+                <tr class="header-row">
+                    <!-- Dynamic headers will be inserted here by JavaScript -->
+                </tr>
+                <tr class="filter-row">
+                    <!-- Dynamic filter cells will be inserted here by JavaScript -->
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                <tr>
+                    <!-- Dynamic data cells will be inserted here by JavaScript -->
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </main>
+
+    <div class="footer">
+        <p>Made by Guido Martens</p>
     </div>
 
-    <button id="reset-filters">🔄 Reset filters</button>
+    <!-- Template data -->
+    <script type="application/json" id="table-data">
+        {{ items|tojson|safe }}
+    </script>
 
-    <h2>CMDB Content</h2>
-    <hr></hr>
-    <label for="hostname-regex">🔍 Regex filter op Hostname:</label>
-    <input type="text" id="hostname-regex" placeholder="Bijv. ^web.* of .*db.*" />
-    <label for="rows-per-page">📄 Regels per pagina:</label>
-    <select id="rows-per-page">
-        <option value="10">10</option>
-        <option value="25">25</option>
-        <option value="50">50</option>
-        <option value="100" selected>100</option>
-        <option value="250">250</option>
-        <option value="500">500</option>
-    </select>
-
-    <table id="cmdbTable" class="display nowrap">
-        <thead>
-            <tr>
-                <th>Hostname</th>
-                <th>FQDN</th>
-                <th>IP Adres(sen)</th>
-                <th>OS</th>
-                <th>Versie</th>
-                <th>Architectuur</th>
-                <th>CPU</th>
-                <th>RAM (MB)</th>
-            </tr>
-        </thead>
-            <tfoot>
-                <tr>
-                    <th></th>
-                    <th></th>
-                    <th></th>
-                    <th></th>
-                    <th></th>
-                    <th></th>
-                    <th></th>
-                    <th></th>
-                </tr>
-            </tfoot>
-        <tbody>
-            {% for item in items %}
-            <tr>
-                <td><a href="/host/{{ item.hostname }}">{{ item.hostname }}</a></td>
-                <td>{{ item.fqdn }}</td>
-                <td>{{ item.ip }}</td>
-                <td>{{ item.os }}</td>
-                <td>{{ item.os_version }}</td>
-                <td>{{ item.architecture }}</td>
-                <td>{{ item.cpu }}</td>
-                <td>{{ item.memory_mb }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-
+    <!-- Application JavaScript -->
+    <script src="/config/columns.js"></script>
+    <script src="/static/js/datatables-init.js"></script>
+    <script src="/static/js/charts-init.js"></script>
     <script>
-        $(document).ready(function () {
-            const table = $('#cmdbTable').DataTable({
-                dom: 'Bfrtip',
-                pageLength: 100,
-                lengthChange: false,
-                buttons: [
-                    { extend: 'colvis', text: 'Zichtbare kolommen', columns: ':not(:first-child)' },
-                    { extend: 'csvHtml5', text: 'Exporteer CSV', title: 'CMDB_export', exportOptions: { columns: ':visible' } },
-                    { extend: 'excelHtml5', text: 'Exporteer Excel', title: 'CMDB_export', exportOptions: { columns: ':visible' } }
-                ]
-            });
+        let osChart;
+        let selectedOs = null;
+        let selectedVersion = null;
 
+        function clearOsFilter() {
+            selectedOs = null;
+            selectedVersion = null;
+            mainTable.column(1).search('').draw();
+            document.querySelectorAll('#versionTable tr').forEach(r => r.classList.remove('selected'));
+            updateCharts();
+        }
+
+        function clearVersionFilter() {
+            selectedVersion = null;
+            if (selectedOs) {
+                mainTable.column(1).search(`^${selectedOs}$`, true, false).column(2).search('').draw();
+            } else {
+                mainTable.column(1).search('').column(2).search('').draw();
+            }
+            document.querySelectorAll('#versionTable tr').forEach(r => r.classList.remove('selected'));
+            updateCharts();
+        }
+
+        $(document).ready(function () {
+            const tableData = JSON.parse(document.getElementById('table-data').textContent);
+            initializeDataTable(tableData);
+            updateCharts(tableData);
+
+            // Handle rows per page change
             $('#rows-per-page').on('change', function () {
                 const val = parseInt($(this).val(), 10);
-                table.page.len(val).draw();
+                mainTable.page.len(val).draw();
             });
 
+            // Handle hostname regex filter
             $('#hostname-regex').on('keyup change', function () {
                 const val = this.value;
-                table.column(0).search(val, true, false).draw();
-            });
-
-            $('#cmdbTable tfoot th').each(function (i) {
-                if (i === 0) return;
-
-                const title = $('#cmdbTable thead tr:eq(0) th').eq(i).text();
-                const column = table.column(i);
-                const select = $('<select multiple class="filter-select"></select>')
-                    .appendTo($(this).empty())
-                    .on('change', function () {
-                        const vals = $(this).val();
-                        if (vals && vals.length > 0) {
-                            const regex = vals.map(v => `^${v.replace(/[.*+?^${}()|[\\]\\]/g, '\\$&')}$`).join('|');
-                            column.search(regex, true, false).draw();
-                        } else {
-                            column.search('').draw();
-                        }
-                    });
-
-                column.data().unique().sort().each(function (d) {
-                    if (d) select.append(`<option value="${d}">${d}</option>`);
-                });
-
-                select.select2({ placeholder: `Filter ${title}`, width: 'resolve' });
-            });
-
-            $('#reset-filters').on('click', function () {
-                $('#hostname-regex').val('');
-                table.columns().search('').draw();
-                $('.filter-select').val(null).trigger('change');
-            });
-
-            // OS Chart
-            const osCounts = {};
-            table.column(3).data().each(function (os) {
-                osCounts[os] = (osCounts[os] || 0) + 1;
-            });
-
-            new Chart(document.getElementById('osChart'), {
-                type: 'pie',
-                data: {
-                    labels: Object.keys(osCounts),
-                    datasets: [{
-                        label: 'Aantal per OS',
-                        data: Object.values(osCounts),
-                        backgroundColor: Object.keys(osCounts).map((_, i) => `hsl(${i * 50}, 70%, 60%)`)
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: { position: 'bottom' },
-                        title: { display: true, text: 'Aantal systemen per OS' }
-                    },
-                    onClick: function (e, elements) {
-                        if (elements.length > 0) {
-                            const label = this.data.labels[elements[0].index];
-                            table.column(3).search(`^${label}$`, true, false).draw();
-                        }
-                    }
-                }
-            });
-
-            // Versie Chart
-            const versionCounts = {};
-            table.column(4).data().each(function (v) {
-                versionCounts[v] = (versionCounts[v] || 0) + 1;
-            });
-
-            new Chart(document.getElementById('versionChart'), {
-                type: 'bar',
-                data: {
-                    labels: Object.keys(versionCounts),
-                    datasets: [{
-                        label: 'Aantal per Versie',
-                        data: Object.values(versionCounts),
-                        backgroundColor: [
-                            '#4dc9f6', '#f67019', '#f53794', '#537bc4', '#acc236', '#166a8f'
-                        ]
-
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: { display: false },
-                        title: { display: true, text: 'Aantal systemen per OS-versie' }
-                    },
-                    onClick: function (e, elements) {
-                        if (elements.length > 0) {
-                            const label = this.data.labels[elements[0].index];
-                            table.column(4).search(`^${label}$`, true, false).draw();
-                        }
-                    },
-                    scales: {
-                        x: { ticks: { autoSkip: false } },
-                        y: { beginAtZero: true }
-                    }
-                }
+                mainTable.column(0).search(val, true, false).draw();
+                updateCharts(mainTable.rows({search: 'applied'}).data().toArray());
             });
         });
     </script>
+
+    <style>
+    /* Add styling for selected rows */
+    table.dataTable tbody tr.selected {
+        background-color: #b0bed9 !important;
+    }
+    
+    /* Add styling for selection info */
+    #selection-info {
+        margin: 10px 0;
+        padding: 10px;
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        display: none;
+    }
+    </style>
 </body>
-<div class="footer">
-  <p>Made by Guido Martens</p>
-</div>
 </html>

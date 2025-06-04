@@ -1,0 +1,40 @@
+/* DataTables row selection styling */
+table.dataTable tbody tr.selected {
+    background-color: #b0bed9 !important;
+}
+
+/* Selection info panel styling */
+#selection-info {
+    margin: 10px 0;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    display: none;
+}
+
+/* Filter row styling */
+#cmdbTable thead tr.filter-row th {
+    padding: 8px;
+    background-color: #f8f9fa;
+}
+
+#cmdbTable thead tr.filter-row input.column-filter {
+    width: 100%;
+    padding: 5px;
+    box-sizing: border-box;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+#cmdbTable thead tr.filter-row .select2-container {
+    width: 100% !important;
+}
+
+/* Export styling */
+@media print {
+    #cmdbTable thead tr.header-row th {
+        background-color: #fff !important;
+        color: #000 !important;
+    }
+} 

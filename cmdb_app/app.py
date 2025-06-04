@@ -1,8 +1,6 @@
-from flask import Flask, send_from_directory, render_template, send_file, request, redirect, url_for
+from flask import Flask, send_from_directory, render_template, send_file, request, redirect, url_for, jsonify, abort
 import os
 import json
-import pandas as pd
-from facts_utils import parse_ansible_facts
 
 app = Flask(__name__)
 
@@ -14,11 +12,25 @@ def load_all_facts():
         if filename.endswith('.json'):
             filepath = os.path.join(FACTS_DIR, filename)
             with open(filepath, 'r', encoding='utf-8') as f:
-                data = json.load(f)
-                ansible_facts = data.get('ansible_facts', {})
-                all_facts.append(parse_ansible_facts(filename, ansible_facts))  # gebruik de helper
+                try:
+                    data = json.load(f)
+                    ansible_facts = data.get('ansible_facts', {})
+                    # Add the filename without .json as a fallback for hostname
+                    if 'ansible_hostname' not in ansible_facts:
+                        ansible_facts['ansible_hostname'] = filename[:-5]
+                    
+                    # Debug: Print the structure of ansible_facts
+                    print(f"Facts for {filename}:")
+                    print(f"- hostname: {ansible_facts.get('ansible_hostname')}")
+                    print(f"- processor_count: {ansible_facts.get('ansible_processor_count')}")
+                    print(f"- distribution: {ansible_facts.get('ansible_distribution')}")
+                    
+                    all_facts.append(ansible_facts)
+                except json.JSONDecodeError as e:
+                    print(f"Error loading {filename}: {e}")
+                except Exception as e:
+                    print(f"Unexpected error loading {filename}: {e}")
     return all_facts
-
 
 def load_facts_for_host(hostname):
     for filename in os.listdir(FACTS_DIR):
@@ -43,7 +55,6 @@ def host_detail(hostname):
         abort(404)
     return render_template('host_detail.html', hostname=hostname, facts=facts)
 
-
 @app.route('/api/facts/<hostname>', methods=['GET'])
 def get_host_facts(hostname):
     filename = f"{hostname}.json"
@@ -52,6 +63,10 @@ def get_host_facts(hostname):
         return send_from_directory(FACTS_DIR, filename)
     return jsonify({"error": "Host not found"}), 404
 
+@app.route('/config/<path:filename>')
+def serve_config(filename):
+    config_dir = os.path.join(os.path.dirname(__file__), 'config')
+    return send_from_directory(config_dir, filename)
 
 if __name__ == "__main__":
     app.run(debug=True)
