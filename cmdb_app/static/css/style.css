@@ -17,9 +17,9 @@ main {
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   flex: 1;
-  max-width: 1800px;
+  max-width: 2400px;
   margin: 20px auto;
-  width: 95%;
+  width: 98%;
   box-sizing: border-box;
 }
 
@@ -37,11 +37,11 @@ header {
   display: flex;
   align-items: center;
   justify-content: center;
-  max-width: 1800px;
+  max-width: 2400px;
   margin: 0 auto;
   position: relative;
   height: 60px;
-  width: 95%;
+  width: 98%;
 }
 
 .logo {
@@ -88,19 +88,25 @@ th {
   text-align: left; 
 }
 
-/* Host detail page specific table styling */
-.section table th:first-child {
-  width: auto;
-  white-space: nowrap;
-}
-
-.section table td:last-child {
-  width: 100%;
-}
-
 /* DataTables specific styling */
-table.dataTable tbody tr.selected {
-  background-color: #b0bed9 !important;
+table.dataTable tbody tr.selected,
+table.dataTable tbody tr.selected > .sorting_1,
+table.dataTable tbody tr.selected > .sorting_2,
+table.dataTable tbody tr.selected > .sorting_3 {
+    background-color: #e6db74 !important;
+    color: #000 !important;
+}
+
+table.dataTable tbody tr.selected a,
+table.dataTable tbody tr.selected td {
+    color: #000 !important;
+}
+
+table.dataTable tbody tr.selected:hover,
+table.dataTable tbody tr.selected > .sorting_1:hover,
+table.dataTable tbody tr.selected > .sorting_2:hover,
+table.dataTable tbody tr.selected > .sorting_3:hover {
+    background-color: #d6cb64 !important;
 }
 
 #cmdbTable {
@@ -114,6 +120,29 @@ table.dataTable tbody tr.selected {
   margin: 0 auto;
 }
 
+/* DataTables length dropdown and buttons positioning */
+.dataTables_wrapper .dt-buttons {
+  float: right !important;
+  margin-left: 10px;
+}
+
+.dataTables_wrapper .dataTables_length {
+  float: left !important;
+  margin-right: 10px;
+}
+
+.dataTables_wrapper .dataTables_filter {
+  float: right !important;
+  margin-left: 10px;
+}
+
+/* Clear the float after the buttons and length selector */
+.dataTables_wrapper::after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
 /* Selection info styling */
 #selection-info {
   margin: 10px 0;
@@ -121,7 +150,23 @@ table.dataTable tbody tr.selected {
   background-color: #f8f9fa;
   border: 1px solid #dee2e6;
   border-radius: 4px;
-  display: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.count-info {
+  display: flex;
+  gap: 20px;
+}
+
+.count-info span {
+  font-weight: bold;
+  color: #333;
+}
+
+#selected-count {
+  color: #007bff;
 }
 
 /* Charts section styling */
@@ -194,21 +239,6 @@ button:hover {
   color: white;
 }
 
-/* Host detail page specific styling */
-.section { 
-  margin-bottom: 40px;
-  width: 100%;
-}
-
-pre { 
-  white-space: pre-wrap; 
-  word-wrap: break-word;
-  background-color: #f8f9fa;
-  padding: 10px;
-  border-radius: 4px;
-  border: 1px solid #dee2e6;
-}
-
 /* Responsive design */
 @media (max-width: 768px) {
   body {
@@ -240,5 +270,105 @@ label { font-weight: bold; }
 .content-heading {
   text-align: center;
   margin: 20px 0;
+}
+
+/* General styles */
+body {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+    background-color: #f5f5f5;
+}
+
+/* Main content styles */
+main {
+    max-width: 2400px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+/* Section styles */
+.section {
+    background: white;
+    border-radius: 5px;
+    padding: 1rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.section h2 {
+    margin-top: 0;
+    color: #333;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 0.5rem;
+}
+
+/* Table styles */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1rem;
+}
+
+th, td {
+    padding: 10px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+th {
+    width: 200px;
+    background-color: #f8f9fa;
+}
+
+/* JSON Code block styles */
+pre[class*="language-"] {
+    background: #2d2d2d;
+    margin: 0;
+    padding: 10px;
+    border-radius: 4px;
+    color: #ccc;
+}
+
+.section table td pre {
+    max-height: 400px;
+    overflow: auto;
+    margin: -10px;
+}
+
+.section table td pre code {
+    color: #ccc;
+    text-shadow: none;
+}
+
+/* Footer styles */
+.footer {
+    text-align: center;
+    padding: 1rem;
+    color: #666;
+    margin-top: 2rem;
+}
+
+/* Back link */
+a[href="/"] {
+    display: inline-block;
+    margin-bottom: 1rem;
+    color: #007bff;
+    text-decoration: none;
+}
+
+a[href="/"]:hover {
+    text-decoration: underline;
+}
+
+/* IP List styles */
+.ip-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.ip-list li {
+    padding: 2px 0;
 }
 

@@ -40,13 +40,12 @@ function updateVersionTable(data, selectedOs = null) {
             }
 
             row.addEventListener('click', () => {
-                const tableData = JSON.parse(document.getElementById('table-data').textContent);
                 if (selectedVersion === v.version && selectedOs === v.os) {
                     // Deselect
                     selectedVersion = null;
                     selectedOs = null;
                     document.querySelectorAll('#versionTable tr').forEach(r => r.classList.remove('selected'));
-                    mainTable.columns().search('').draw();
+                    mainTable.search('').draw();
                 } else {
                     // Select new version
                     selectedVersion = v.version;
@@ -54,109 +53,111 @@ function updateVersionTable(data, selectedOs = null) {
                     document.querySelectorAll('#versionTable tr').forEach(r => r.classList.remove('selected'));
                     row.classList.add('selected');
                     
-                    // Find column indices by their IDs
-                    const osColumnIndex = findColumnIndexById(mainTable, 'os');
-                    const versionColumnIndex = findColumnIndexById(mainTable, 'os_version');
-                    
-                    // Apply the filters using the correct indices
-                    if (osColumnIndex !== -1 && versionColumnIndex !== -1) {
-                        mainTable.column(osColumnIndex).search(`^${v.os}$`, true, false)
-                                .column(versionColumnIndex).search(`^${v.version}$`, true, false)
-                                .draw();
-                    }
+                    // Create the search term with exact OS and version
+                    const searchTerm = `${v.os}|||${v.version}`;
+                    console.log('Applying version filter:', searchTerm);  // Debug log
+                    mainTable.search(searchTerm).draw();
                 }
-                updateCharts(tableData);
             });
         });
 }
 
-function updateCharts(data) {
-    if (!data) {
-        return;
-    }
-
-    // Get OS distribution data
-    const osData = {};
-    data.forEach(row => {
-        try {
-            const os = row.ansible_distribution || 'Unknown';
-            osData[os] = (osData[os] || 0) + 1;
-        } catch (e) {
-            // Silent error handling
-        }
-    });
-
-    // Sort OS data by count
-    const sortedOsData = Object.entries(osData)
-        .sort((a, b) => b[1] - a[1]);
-
-    // Create OS chart
-    const osCtx = document.getElementById('osChart');
-    if (!osCtx) {
-        return;
-    }
-
-    // Destroy existing chart if it exists
-    if (window.osChart && typeof window.osChart.destroy === 'function') {
-        window.osChart.destroy();
-    }
+function updateCharts() {
+    // Get current search parameters
+    const currentSearch = mainTable.search();
+    console.log('Current search:', currentSearch);  // Debug log
     
-    // Create new chart
-    window.osChart = new Chart(osCtx, {
-        type: 'pie',
-        data: {
-            labels: sortedOsData.map(([os]) => os),
-            datasets: [{
-                data: sortedOsData.map(([, count]) => count),
-                backgroundColor: [
-                    '#FF6384',
-                    '#36A2EB',
-                    '#FFCE56',
-                    '#4BC0C0',
-                    '#9966FF',
-                    '#FF9F40'
-                ]
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    position: 'right'
-                }
+    // Fetch all data for charts
+    $.get('/api/data', { 
+        draw: 1, 
+        start: 0, 
+        length: -1,
+        search: { value: currentSearch }
+    }, function(response) {
+        const data = response.data;
+        
+        if (!data || !Array.isArray(data)) {
+            console.error('Invalid data received:', data);
+            return;
+        }
+
+        // Get OS distribution data
+        const osData = {};
+        data.forEach(row => {
+            try {
+                const os = row.ansible_distribution || 'Unknown';
+                osData[os] = (osData[os] || 0) + 1;
+            } catch (e) {
+                console.error('Error processing row:', e);
+            }
+        });
+
+        // Sort OS data by count
+        const sortedOsData = Object.entries(osData)
+            .sort((a, b) => b[1] - a[1]);
+
+        // Create OS chart
+        const osCtx = document.getElementById('osChart');
+        if (!osCtx) {
+            console.error('Chart canvas not found');
+            return;
+        }
+
+        // Destroy existing chart if it exists
+        if (window.osChart && typeof window.osChart.destroy === 'function') {
+            window.osChart.destroy();
+        }
+        
+        // Create new chart
+        window.osChart = new Chart(osCtx, {
+            type: 'pie',
+            data: {
+                labels: sortedOsData.map(([os]) => os),
+                datasets: [{
+                    data: sortedOsData.map(([, count]) => count),
+                    backgroundColor: [
+                        '#FF6384',
+                        '#36A2EB',
+                        '#FFCE56',
+                        '#4BC0C0',
+                        '#9966FF',
+                        '#FF9F40'
+                    ]
+                }]
             },
-            onClick: (event, elements) => {
-                const tableData = JSON.parse(document.getElementById('table-data').textContent);
-                if (elements.length > 0) {
-                    const index = elements[0].index;
-                    const os = sortedOsData[index][0];
-                    
-                    if (selectedOs === os) {
-                        // Deselect if clicking the same OS
-                        selectedOs = null;
-                        selectedVersion = null;
-                        mainTable.columns().search('').draw();
-                    } else {
-                        // Select new OS
-                        selectedOs = os;
-                        selectedVersion = null;
-                        
-                        // Find column index by ID
-                        const osColumnIndex = findColumnIndexById(mainTable, 'os');
-                        
-                        // Apply the filter using the correct index
-                        if (osColumnIndex !== -1) {
-                            mainTable.column(osColumnIndex).search(`^${os}$`, true, false).draw();
-                        }
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'right'
                     }
-                    
-                    // Update version table with filtered data
-                    updateVersionTable(tableData, selectedOs);
+                },
+                onClick: (event, elements) => {
+                    if (elements.length > 0) {
+                        const index = elements[0].index;
+                        const os = sortedOsData[index][0];
+                        
+                        if (selectedOs === os) {
+                            // Deselect if clicking the same OS
+                            selectedOs = null;
+                            selectedVersion = null;
+                            mainTable.search('').draw();
+                        } else {
+                            // Select new OS
+                            selectedOs = os;
+                            selectedVersion = null;
+                            console.log('Applying OS filter:', os);  // Debug log
+                            mainTable.search(os).draw();
+                        }
+                        
+                        // Update version table with filtered data
+                        updateVersionTable(data, selectedOs);
+                    }
                 }
             }
-        }
-    });
+        });
 
-    // Update version table
-    updateVersionTable(data, selectedOs);
+        // Update version table
+        updateVersionTable(data, selectedOs);
+    });
 } 

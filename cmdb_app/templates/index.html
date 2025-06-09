@@ -21,16 +21,20 @@
     <link rel="stylesheet" href="/config/custom.css" />
 
 
-    <!-- JavaScript Libraries -->
+    <!-- Core JavaScript Libraries -->
     <script src="/static/js/jquery/jquery-3.7.0.min.js"></script>
     <script src="/static/js/jquery/jquery.dataTables.min.js"></script>
-    <script src="/static/js/datatabels/dataTables.buttons.min.js"></script>
+
+    <!-- DataTables Extensions -->
+    <script src="/static/js/datatables/dataTables.buttons.min.js"></script>
     <script src="/static/js/datatables/buttons.html5.min.js"></script>
     <script src="/static/js/datatables/buttons.colVis.min.js"></script>
+    <script src="/static/js/datatables/dataTables.select.min.js"></script>
     <script src="/static/js/datatables/jszip.min.js"></script>
+
+    <!-- Other Libraries -->
     <script src="/static/js/select2/select2.min.js"></script>
     <script src="/static/js/charts/chart.js"></script>
-    <script src="/static/js/datatables/dataTables.select.min.js"></script>
 </head>
 
 <body>
@@ -74,7 +78,10 @@
         <hr></hr>
 
         <div id="selection-info">
-            <span id="selected-count">0 rows selected</span>
+            <div class="count-info">
+                <span id="total-count">Totaal: 0 items</span>
+                <span id="selected-count">0 geselecteerd</span>
+            </div>
             <button id="clear-selection">Clear Selection</button>
         </div>
 
@@ -89,13 +96,6 @@
                     <!-- Filter inputs will be added here by JavaScript -->
                 </tr>
             </tfoot>
-            <tbody>
-                {% for item in items %}
-                <tr>
-                    <!-- Dynamic data cells will be inserted here by JavaScript -->
-                </tr>
-                {% endfor %}
-            </tbody>
         </table>
     </main>
 
@@ -103,44 +103,16 @@
         <p>Made by Guido Martens</p>
     </div>
 
-    <!-- Template data -->
-    <script type="application/json" id="table-data">
-        {{ items|tojson|safe }}
+    <!-- Global Variables -->
+    <script>
+        var selectedOs = null;
+        var selectedVersion = null;
+        var mainTable = null;
     </script>
 
     <!-- Application JavaScript -->
     <script src="/static/js/datatables/table-utils.js"></script>
-    <script src="/config/columns.js"></script>
     <script src="/static/js/datatables/datatables-init.js"></script>
     <script src="/static/js/charts/charts-init.js"></script>
-    <script>
-        let selectedOs = null;
-        let selectedVersion = null;
-
-        function clearOsFilter() {
-            selectedOs = null;
-            selectedVersion = null;
-            mainTable.column(1).search('').draw();
-            document.querySelectorAll('#versionTable tr').forEach(r => r.classList.remove('selected'));
-            updateCharts(JSON.parse(document.getElementById('table-data').textContent));
-        }
-
-        function clearVersionFilter() {
-            selectedVersion = null;
-            if (selectedOs) {
-                mainTable.column(1).search(`^${selectedOs}$`, true, false).column(2).search('').draw();
-            } else {
-                mainTable.column(1).search('').column(2).search('').draw();
-            }
-            document.querySelectorAll('#versionTable tr').forEach(r => r.classList.remove('selected'));
-            updateCharts(JSON.parse(document.getElementById('table-data').textContent));
-        }
-
-        $(document).ready(function () {
-            const tableData = JSON.parse(document.getElementById('table-data').textContent);
-            initializeDataTable(tableData);
-            updateCharts(tableData);
-        });
-    </script>
 </body>
 </html>

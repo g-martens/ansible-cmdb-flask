@@ -1,27 +1,131 @@
-let mainTable;
-
-function initializeDataTable(data) {
-    console.log('Initializing DataTable with data:', data);
-    // Initialize DataTable
+// Initialize DataTable when document is ready
+$(document).ready(function() {
+    // Initialize DataTable with server-side processing
     mainTable = $('#cmdbTable').DataTable({
-        data: data,
-        columns: window.tableColumns,
-        dom: 'Bfrtip',
-        buttons: [
-            'copy', 'csv', 'excel',
+        processing: true,
+        serverSide: true,
+        ajax: '/api/data',
+        columns: [
             {
-                extend: 'colvis',
-                text: 'Column Visibility'
+                title: "Hostname",
+                data: "ansible_hostname",
+                render: function(data, type, row) {
+                    if (type === 'display') {
+                        return `<a href="/host/${data}">${data}</a>`;
+                    }
+                    return data;
+                }
+            },
+            {
+                title: "FQDN",
+                data: "ansible_fqdn"
+            },
+            {
+                title: "OS",
+                data: "ansible_distribution"
+            },
+            {
+                title: "OS Version",
+                data: "ansible_distribution_version"
+            },
+            {
+                title: "Architecture",
+                data: "ansible_architecture"
+            },
+            {
+                title: "Processor Cores",
+                data: "ansible_processor_cores"
+            },
+            {
+                title: "Memory (GB)",
+                data: "ansible_memtotal_mb",
+                render: function(data, type, row) {
+                    if (type === 'display') {
+                        return (data / 1024).toFixed(1);
+                    }
+                    return data;
+                }
+            },
+            {
+                title: "IP Addresses",
+                data: "ansible_all_ipv4_addresses",
+                render: function(data, type, row) {
+                    if (type === 'display' && Array.isArray(data)) {
+                        return `<ul class="ip-list">${data.map(ip => `<li>${ip}</li>`).join('')}</ul>`;
+                    }
+                    return Array.isArray(data) ? data.join(', ') : '';
+                }
             }
         ],
-        pageLength: 25,
+        dom: 'lBfrtip',
+        lengthMenu: [
+            [10, 20, 50, 100, 200, 500, -1],
+            ['10', '20', '50', '100', '200', '500', 'All']
+        ],
+        buttons: [
+            {
+                extend: 'copy',
+                text: 'Kopieer',
+                exportOptions: {
+                    modifier: {
+                        search: 'applied',
+                        order: 'applied'
+                    }
+                }
+            },
+            {
+                extend: 'csv',
+                text: 'CSV',
+                exportOptions: {
+                    modifier: {
+                        search: 'applied',
+                        order: 'applied'
+                    }
+                }
+            },
+            {
+                extend: 'excel',
+                text: 'Excel',
+                exportOptions: {
+                    modifier: {
+                        search: 'applied',
+                        order: 'applied'
+                    }
+                }
+            },
+            {
+                extend: 'colvis',
+                text: 'Kolommen'
+            }
+        ],
+        pageLength: 50,
         order: [[0, 'asc']],
+        orderCellsTop: true,
+        ordering: true,
+        orderMulti: true,
+        orderClasses: true,
         scrollX: true,
         select: true,
-        initComplete: function() {
+        language: {
+            lengthMenu: "Toon _MENU_ regels per pagina",
+            info: "Toont _START_ tot _END_ van _TOTAL_ regels",
+            infoEmpty: "Geen resultaten gevonden",
+            infoFiltered: "(gefilterd uit _MAX_ totale regels)",
+            search: "Zoeken:",
+            paginate: {
+                first: "Eerste",
+                last: "Laatste",
+                next: "Volgende",
+                previous: "Vorige"
+            },
+            sortAscending: ": activeer om kolom oplopend te sorteren",
+            sortDescending: ": activeer om kolom aflopend te sorteren"
+        },
+        initComplete: function(settings, json) {
             console.log('DataTable initialization complete');
+            
             // Add filter inputs to each column
-            this.api().columns().every(function() {
+            this.api().columns().every(function(index) {
                 let column = this;
                 let title = $(column.header()).text();
                 
@@ -34,14 +138,33 @@ function initializeDataTable(data) {
                         }
                     });
             });
+
+            // Update total count
+            updateTotalCount();
+
+            // Initial chart update
+            updateCharts();
+        },
+        drawCallback: function(settings) {
+            // Update charts when data is redrawn
+            updateCharts();
+            // Update total count when table is redrawn (for filtered results)
+            updateTotalCount();
         }
     });
 
     // Handle row selection
     mainTable.on('select deselect', function() {
         let selectedRows = mainTable.rows({ selected: true }).count();
-        $('#selected-count').text(selectedRows + ' rows selected');
+        let totalRows = mainTable.rows().count();
+        $('#selected-count').text(selectedRows + ' geselecteerd');
     });
+
+    // Function to update total count
+    function updateTotalCount() {
+        let totalRows = mainTable.page.info().recordsDisplay;
+        $('#total-count').text('Totaal: ' + totalRows + ' items');
+    }
 
     // Clear selection button
     $('#clear-selection').on('click', function() {
@@ -55,6 +178,26 @@ function initializeDataTable(data) {
         selectedOs = null;
         selectedVersion = null;
         document.querySelectorAll('#versionTable tr').forEach(r => r.classList.remove('selected'));
-        updateCharts(data);
+        updateCharts();
     });
+});
+
+// Filter clearing functions
+function clearOsFilter() {
+    selectedOs = null;
+    selectedVersion = null;
+    mainTable.search('').draw();
+    document.querySelectorAll('#versionTable tr').forEach(r => r.classList.remove('selected'));
+    updateCharts();
+}
+
+function clearVersionFilter() {
+    selectedVersion = null;
+    if (selectedOs) {
+        mainTable.search(selectedOs).draw();
+    } else {
+        mainTable.search('').draw();
+    }
+    document.querySelectorAll('#versionTable tr').forEach(r => r.classList.remove('selected'));
+    updateCharts();
 } 
