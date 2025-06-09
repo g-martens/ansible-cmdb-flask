@@ -17,9 +17,9 @@ main {
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   flex: 1;
-  max-width: 1800px;
+  max-width: 2400px;
   margin: 20px auto;
-  width: 95%;
+  width: 98%;
   box-sizing: border-box;
 }
 
@@ -37,11 +37,11 @@ header {
   display: flex;
   align-items: center;
   justify-content: center;
-  max-width: 1800px;
+  max-width: 2400px;
   margin: 0 auto;
   position: relative;
   height: 60px;
-  width: 95%;
+  width: 98%;
 }
 
 .logo {
@@ -118,6 +118,29 @@ table.dataTable tbody tr.selected > .sorting_3:hover {
 .dataTables_wrapper {
   width: 100%;
   margin: 0 auto;
+}
+
+/* DataTables length dropdown and buttons positioning */
+.dataTables_wrapper .dt-buttons {
+  float: right !important;
+  margin-left: 10px;
+}
+
+.dataTables_wrapper .dataTables_length {
+  float: left !important;
+  margin-right: 10px;
+}
+
+.dataTables_wrapper .dataTables_filter {
+  float: right !important;
+  margin-left: 10px;
+}
+
+/* Clear the float after the buttons and length selector */
+.dataTables_wrapper::after {
+  content: "";
+  display: table;
+  clear: both;
 }
 
 /* Selection info styling */
@@ -243,7 +266,7 @@ body {
 
 /* Main content styles */
 main {
-    max-width: 1200px;
+    max-width: 2400px;
     margin: 0 auto;
     padding: 0 1rem;
 }
