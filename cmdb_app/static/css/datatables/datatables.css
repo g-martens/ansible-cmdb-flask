@@ -1,6 +1,59 @@
+/* DataTables CSS Variables Override */
+:root {
+    --dt-row-selected: 230, 219, 116; /* This is #e6db74 in RGB */
+    --dt-row-selected-text: 0, 0, 0; /* Black text color in RGB */
+    --dt-row-selected-link: 0, 0, 0; /* Black link color in RGB */
+}
+
 /* DataTables row selection styling */
-table.dataTable tbody tr.selected {
-    background-color: #b0bed9 !important;
+table.dataTable tbody tr.selected,
+table.dataTable tbody tr.selected > .sorting_1,
+table.dataTable tbody tr.selected > .sorting_2,
+table.dataTable tbody tr.selected > .sorting_3,
+table.dataTable.display tbody tr.selected,
+table.dataTable.display tbody tr.selected > .sorting_1,
+table.dataTable.display tbody tr.selected > .sorting_2,
+table.dataTable.display tbody tr.selected > .sorting_3,
+table.dataTable.order-column tbody tr.selected,
+table.dataTable.order-column tbody tr.selected > .sorting_1,
+table.dataTable.order-column tbody tr.selected > .sorting_2,
+table.dataTable.order-column tbody tr.selected > .sorting_3,
+table.dataTable tbody > tr.selected,
+table.dataTable tbody > tr > .selected,
+table.dataTable.stripe tbody > tr.odd.selected,
+table.dataTable.stripe tbody > tr.odd > .selected,
+table.dataTable.display tbody > tr.odd.selected,
+table.dataTable.display tbody > tr.odd > .selected,
+table.dataTable.hover tbody > tr.selected:hover,
+table.dataTable.hover tbody > tr > .selected:hover,
+table.dataTable.display tbody > tr.selected:hover,
+table.dataTable.display tbody > tr > .selected:hover {
+    background-color: #e6db74 !important;
+    color: #000 !important;
+}
+
+table.dataTable tbody tr.selected td,
+table.dataTable tbody tr.selected a,
+table.dataTable.display tbody tr.selected td,
+table.dataTable.display tbody tr.selected a,
+table.dataTable.order-column tbody tr.selected td,
+table.dataTable.order-column tbody tr.selected a,
+table.dataTable tbody > tr.selected td,
+table.dataTable tbody > tr.selected a,
+table.dataTable.stripe tbody > tr.odd.selected td,
+table.dataTable.stripe tbody > tr.odd.selected a {
+    color: #000 !important;
+}
+
+table.dataTable tbody tr.selected:hover,
+table.dataTable tbody tr.selected > .sorting_1:hover,
+table.dataTable.display tbody tr.selected:hover,
+table.dataTable.display tbody tr.selected > .sorting_1:hover,
+table.dataTable.order-column tbody tr.selected:hover,
+table.dataTable.order-column tbody tr.selected > .sorting_1:hover,
+table.dataTable.hover tbody > tr.selected:hover,
+table.dataTable.display tbody > tr.selected:hover {
+    background-color: #d6cb64 !important;
 }
 
 /* Selection info panel styling */
