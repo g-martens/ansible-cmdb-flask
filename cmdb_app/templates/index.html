@@ -6,27 +6,31 @@
     <title>CMDB Overview</title>
 
     <!-- DataTables CSS -->
-    <link rel="stylesheet" href="/static/css/jquery.dataTables.min.css" />
-    <link rel="stylesheet" href="/static/css/buttons.dataTables.min.css" />
-    <link rel="stylesheet" href="https://cdn.datatables.net/select/1.7.0/css/select.dataTables.min.css" />
-    
+    <link rel="stylesheet" href="/static/css/datatables/jquery.dataTables.min.css" />
+    <link rel="stylesheet" href="/static/css/datatables/buttons.dataTables.min.css" />
+    <link rel="stylesheet" href="/static/css/datatables/datatables.css" />
+    <link rel="stylesheet" href="/static/css/datatables/select.dataTables.min.css" />
+
     <!-- Other CSS -->
-    <link rel="stylesheet" href="/static/css/select2.min.css" />
+    <link rel="stylesheet" href="/static/css/select2/select2.min.css" />
     <link rel="stylesheet" href="/static/css/style.css" />
-    <link rel="stylesheet" href="/static/css/charts.css" />
-    <link rel="stylesheet" href="/static/css/datatables.css" />
+    <link rel="stylesheet" href="/static/css/charts/charts.css" />
+    
+
+    <!-- CSS Overwrite  -->
     <link rel="stylesheet" href="/config/custom.css" />
 
+
     <!-- JavaScript Libraries -->
-    <script src="/static/js/jquery-3.7.0.min.js"></script>
-    <script src="/static/js/jquery.dataTables.min.js"></script>
-    <script src="/static/js/dataTables.buttons.min.js"></script>
-    <script src="/static/js/buttons.html5.min.js"></script>
-    <script src="/static/js/buttons.colVis.min.js"></script>
-    <script src="/static/js/jszip.min.js"></script>
-    <script src="/static/js/select2.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.datatables.net/select/1.7.0/js/dataTables.select.min.js"></script>
+    <script src="/static/js/jquery/jquery-3.7.0.min.js"></script>
+    <script src="/static/js/jquery/jquery.dataTables.min.js"></script>
+    <script src="/static/js/datatabels/dataTables.buttons.min.js"></script>
+    <script src="/static/js/datatables/buttons.html5.min.js"></script>
+    <script src="/static/js/datatables/buttons.colVis.min.js"></script>
+    <script src="/static/js/datatables/jszip.min.js"></script>
+    <script src="/static/js/select2/select2.min.js"></script>
+    <script src="/static/js/charts/chart.js"></script>
+    <script src="/static/js/datatables/dataTables.select.min.js"></script>
 </head>
 
 <body>
@@ -79,10 +83,12 @@
                 <tr class="header-row">
                     <!-- Dynamic headers will be inserted here by JavaScript -->
                 </tr>
-                <tr class="filter-row">
-                    <!-- Dynamic filter cells will be inserted here by JavaScript -->
-                </tr>
             </thead>
+            <tfoot>
+                <tr>
+                    <!-- Filter inputs will be added here by JavaScript -->
+                </tr>
+            </tfoot>
             <tbody>
                 {% for item in items %}
                 <tr>
@@ -103,10 +109,10 @@
     </script>
 
     <!-- Application JavaScript -->
-    <script src="/static/js/table-utils.js"></script>
+    <script src="/static/js/datatables/table-utils.js"></script>
     <script src="/config/columns.js"></script>
-    <script src="/static/js/datatables-init.js"></script>
-    <script src="/static/js/charts-init.js"></script>
+    <script src="/static/js/datatables/datatables-init.js"></script>
+    <script src="/static/js/charts/charts-init.js"></script>
     <script>
         let selectedOs = null;
         let selectedVersion = null;
