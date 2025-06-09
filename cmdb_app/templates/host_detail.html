@@ -5,11 +5,16 @@
     <title>Ansible CMDB</title>
     <link rel="icon" type="image/x-icon" href="/static/images/Tux.svg.png" />
     <link rel="stylesheet" href="/static/css/style.css" />
+    <link rel="stylesheet" href="/static/css/style-detail.css" />
     <!-- Other CSS -->
     <link rel="stylesheet" href="/static/css/select2/select2.min.css" />
     <link rel="stylesheet" href="/static/css/charts/charts.css" />
     <link rel="stylesheet" href="/static/css/datatables/datatables.css" />
     <link rel="stylesheet" href="/config/custom.css" />
+    <!-- Prism CSS -->
+    <link rel="stylesheet" href="/static/css/prism/prism.css">
+    <link rel="stylesheet" href="/static/css/prism/prism-tomorrow.css">
+
 </head>
 
 <body>
@@ -18,62 +23,72 @@
             <div class="logo">
                 <img src="/static/images/Tux.svg.png" alt="Tux Linux Mascot" />
             </div>
-            <h1>Ansible CMDB</h1>
+            <h1>Host Details: {{ hostname }}</h1>
         </div>
     </header>
 
     <main>
-        <h1>Ansible Facts for host: {{ hostname }}</h1>
-        <a href="/">⬅️ Back to overview</a>
+        <div class="container">
+            <a href="/" class="back-button">← Back to Overview</a>
 
-        {% macro render_section(title, data) %}
-            {% if data %}
-            <div class="section">
-                <h2>{{ title }}</h2>
-                <table>
-                    <tbody>
-                    {% for key, value in data.items() %}
-                        <tr>
-                            <th>{{ key }}</th>
-                            <td>
-                                {% if value is mapping %}
-                                    <pre>{{ value | tojson(indent=2) }}</pre>
-                                {% elif value is iterable and not value is string %}
-                                    <pre>{{ value | join(', ') }}</pre>
-                                {% else %}
-                                    {{ value }}
-                                {% endif %}
-                            </td>
-                        </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            {% endif %}
-        {% endmacro %}
+            {% macro render_section(title, data) %}
+                {% if data %}
+                <div class="section">
+                    <h2>{{ title }}</h2>
+                    <table>
+                        <tbody>
+                        {% for key, value in data.items() %}
+                            <tr>
+                                <th>{{ key }}</th>
+                                <td>
+                                    {% if value is mapping or (value is iterable and not value is string) %}
+                                        <pre><code class="language-json">{{ value | tojson(indent=2) }}</code></pre>
+                                    {% else %}
+                                        {{ value }}
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% endif %}
+            {% endmacro %}
 
-        {{ render_section("System Information", {
-            "OS": facts.get('ansible_distribution', '') + ' ' + facts.get('ansible_distribution_version', ''),
-            "Kernel": facts.get('ansible_kernel', ''),
-            "Hostname": facts.get('ansible_hostname', ''),
-            "FQDN": facts.get('ansible_fqdn', '')
-        }) }}
+            {{ render_section("System Information", {
+                "OS": facts.get('ansible_distribution', '') + ' ' + facts.get('ansible_distribution_version', ''),
+                "Kernel": facts.get('ansible_kernel', ''),
+                "Hostname": facts.get('ansible_hostname', ''),
+                "FQDN": facts.get('ansible_fqdn', '')
+            }) }}
 
-        {{ render_section("CPU & Memory", {
-            "CPU Cores": facts.get('ansible_processor_cores', ''),
-            "CPU Model": (facts.get('ansible_processor') or ['', ''])[1],
-            "RAM MB": facts.get('ansible_memtotal_mb', '')
-        }) }}
+            {{ render_section("CPU & Memory", {
+                "CPU Cores": facts.get('ansible_processor_cores', ''),
+                "CPU Model": (facts.get('ansible_processor') or ['', ''])[1],
+                "RAM MB": facts.get('ansible_memtotal_mb', '')
+            }) }}
 
-        {{ render_section("Network Interfaces", facts.get('ansible_interfaces', {})) }}
+            {{ render_section("Network Interfaces", facts.get('ansible_interfaces', {})) }}
 
-        {{ render_section("Devices", facts.get('ansible_devices', {}) ) }}
+            {{ render_section("Devices", facts.get('ansible_devices', {}) ) }}
 
-        {{ render_section("Other Facts", facts ) }}
+            {{ render_section("Local Facts", facts.get('ansible_local', {}) ) }}
+
+            {{ render_section("Other Facts", facts ) }}
+        </div>
     </main>
 
     <div class="footer">
         <p>Made by Guido Martens</p>
     </div>
+
+    <!-- Prism JS -->
+    <script src="/static/js/prism/prism.js"></script>
+    <script>
+        // Re-run Prism highlighting after the page loads
+        document.addEventListener('DOMContentLoaded', (event) => {
+            Prism.highlightAll();
+        });
+    </script>
 </body>
 </html>
