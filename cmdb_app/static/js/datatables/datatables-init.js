@@ -121,7 +121,7 @@ $(document).ready(function() {
             sortAscending: ": activeer om kolom oplopend te sorteren",
             sortDescending: ": activeer om kolom aflopend te sorteren"
         },
-        initComplete: function() {
+        initComplete: function(settings, json) {
             console.log('DataTable initialization complete');
             
             // Add filter inputs to each column
@@ -139,20 +139,32 @@ $(document).ready(function() {
                     });
             });
 
+            // Update total count
+            updateTotalCount();
+
             // Initial chart update
             updateCharts();
         },
-        drawCallback: function() {
+        drawCallback: function(settings) {
             // Update charts when data is redrawn
             updateCharts();
+            // Update total count when table is redrawn (for filtered results)
+            updateTotalCount();
         }
     });
 
     // Handle row selection
     mainTable.on('select deselect', function() {
         let selectedRows = mainTable.rows({ selected: true }).count();
-        $('#selected-count').text(selectedRows + ' rows selected');
+        let totalRows = mainTable.rows().count();
+        $('#selected-count').text(selectedRows + ' geselecteerd');
     });
+
+    // Function to update total count
+    function updateTotalCount() {
+        let totalRows = mainTable.page.info().recordsDisplay;
+        $('#total-count').text('Totaal: ' + totalRows + ' items');
+    }
 
     // Clear selection button
     $('#clear-selection').on('click', function() {

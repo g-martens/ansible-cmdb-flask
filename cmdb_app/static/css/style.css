@@ -150,7 +150,23 @@ table.dataTable tbody tr.selected > .sorting_3:hover {
   background-color: #f8f9fa;
   border: 1px solid #dee2e6;
   border-radius: 4px;
-  display: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.count-info {
+  display: flex;
+  gap: 20px;
+}
+
+.count-info span {
+  font-weight: bold;
+  color: #333;
+}
+
+#selected-count {
+  color: #007bff;
 }
 
 /* Charts section styling */
