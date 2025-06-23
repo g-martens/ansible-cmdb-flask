@@ -3,6 +3,9 @@
 
 >This project provides a Flask-based CMDB (Configuration Management Database) application. You can run the app using Docker or Docker Compose for easy deployment and management.
 
+![Main Page](images/ansible-cmdb.png)
+![Detailed page](images/detailed-page.png)
+
 ## 🛠 Built With <a name="built-with"></a>
 * Jquery
 * Python
